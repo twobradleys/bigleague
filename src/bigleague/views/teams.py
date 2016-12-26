@@ -25,21 +25,24 @@ def init_app(app, api):
     class TeamCreate(Resource):
         @api.expect(team_model, validate=True)
         def post(self):
+            """Create a team."""
             team = request.get_json()
             return expand_relations(put_team(team)), 201
 
     @api.route('/v1/team/<uuid:team_id>')
     class TeamRead(Resource):
         def get(self, team_id):
+            """Retrieve info about a team."""
             team = get_team(team_id)
             if team:
                 return expand_relations(team), 200
             else:
                 return {}, 404
 
-    @api.route('/v1/teams/<string:sport>')
+    @api.route('/v1/teams/by-sport/<string:sport>')
     class TeamReadBySport(Resource):
         def get(self, sport):
+            """Retrieve info about all teams in a sport."""
             team = get_teams_by_sport(sport)
             if team:
                 return expand_relations(team), 200

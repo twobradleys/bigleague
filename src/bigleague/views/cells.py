@@ -11,6 +11,7 @@ def init_app(app, api):
         @api.doc(params={'timestamp': 'Recall the cell information at a '
                          'particular timestamp (in epoch milliseconds).'})
         def get(self, cell_id):
+            """Retrieve a cell in a game by its ID."""
             cell = get_cell(id=cell_id,
                             timestamp=request.args.get('timestamp', None))
             if cell:
@@ -18,11 +19,12 @@ def init_app(app, api):
             else:
                 return {}, 404
 
-    @api.route('/v1/cell/by-game/<uuid:game_id>/preshuffled/<int:home_index>/<int:away_index>')  # noqa
-    class CellReadByGameIdPreshuffled(Resource):
+    @api.route('/v1/cell/by-game/<uuid:game_id>/by-index/<int:home_index>/<int:away_index>')  # noqa
+    class CellReadByGameIdByIndex(Resource):
         @api.doc(params={'timestamp': 'Recall the cell information at a '
                          'particular timestamp (in epoch milliseconds).'})
         def get(self, game_id, home_index, away_index):
+            """Retrieve a cell in a game by its pre-shuffled index."""
             cell = get_cell(game_id=game_id, home_index=home_index,
                             away_index=away_index,
                             timestamp=request.args.get('timestamp', None))
@@ -36,6 +38,7 @@ def init_app(app, api):
         @api.doc(params={'timestamp': 'Recall the cell information at a '
                          'particular timestamp (in epoch milliseconds).'})
         def get(self, game_id, home_digits, away_digits):
+            """Retrieve a cell in a game by its digits."""
             cell = get_cell(game_id=game_id, home_digits=home_digits,
                             away_digits=away_digits,
                             timestamp=request.args.get('timestamp', None))

@@ -29,6 +29,7 @@ def init_app(app, api):
     class GameCreate(Resource):
         @api.expect(game_model, validate=True)
         def post(self):
+            """Create a game."""
             game = put_game(request.get_json())
             if game:
                 return expand_relations(game), 200
@@ -40,6 +41,7 @@ def init_app(app, api):
         @api.doc(params={'timestamp': 'Recall the game information at a '
                          'particular timestamp (in epoch milliseconds).'})
         def get(self, game_id):
+            """Retrieve game info from its ID."""
             game = get_game(id=game_id,
                             timestamp=request.args.get('timestamp', None))
             if game:
@@ -52,6 +54,7 @@ def init_app(app, api):
         @api.doc(params={'timestamp': 'Recall the game information at a '
                          'particular timestamp (in epoch milliseconds).'})
         def get(self, sport):
+            """Retrieve games by sport."""
             games = get_games(sport=sport,
                               timestamp=request.args.get('timestamp', None))
             if games:
@@ -64,6 +67,7 @@ def init_app(app, api):
         @api.doc(params={'timestamp': 'Recall the game information at a '
                          'particular timestamp (in epoch milliseconds).'})
         def get(self):
+            """Retrieve all games."""
             games = get_games(timestamp=request.args.get('timestamp', None))
             if games:
                 return expand_relations(games), 200

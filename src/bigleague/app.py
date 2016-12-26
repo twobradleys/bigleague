@@ -11,7 +11,11 @@ import bigleague.views.games
 def create_app_singletons():
     app = Flask('bigleague')
     api = Api(app, title='bigleague',
-              description="""We're playing Squares, big league!""")
+              description="""We're playing Squares, big league!
+
+              Note that many endpoints allow for the use of `timestamp`
+              parameters in order to see what the game looked like at a prior
+              point in time.""")
 
     bigleague.views.teams.init_app(app, api)
     bigleague.views.players.init_app(app, api)
