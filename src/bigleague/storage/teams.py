@@ -14,6 +14,7 @@ def get_team_fields():
         'id',
         'name',
         'sport',
+        'timestamp',
     ]
 
 
