@@ -17,14 +17,14 @@ def get_player_fields():
 def init_app(app, api):
     player_model = api.model('Player', get_player_fields())
 
-    @api.route('/player')
+    @api.route('/v1/player')
     class PlayerCreate(Resource):
         @api.expect(player_model, validate=True)
         def post(self):
             player = request.get_json()
             return expand_relations(put_player(player)), 201
 
-    @api.route('/player/by-<string:identifier>/<string:handle>')
+    @api.route('/v1/player/by-<string:identifier>/<string:handle>')
     class PlayerRead(Resource):
         def get(self, identifier, handle):
             player = get_player(**{identifier: handle})
@@ -33,7 +33,7 @@ def init_app(app, api):
             else:
                 return {}, 404
 
-    @api.route('/players')
+    @api.route('/v1/players')
     class PlayersRead(Resource):
         def get(self):
             player = get_players()

@@ -21,14 +21,14 @@ def get_team_fields():
 def init_app(app, api):
     team_model = api.model('Team', get_team_fields())
 
-    @api.route('/team')
+    @api.route('/v1/team')
     class TeamCreate(Resource):
         @api.expect(team_model, validate=True)
         def post(self):
             team = request.get_json()
             return expand_relations(put_team(team)), 201
 
-    @api.route('/team/<uuid:team_id>')
+    @api.route('/v1/team/<uuid:team_id>')
     class TeamRead(Resource):
         def get(self, team_id):
             team = get_team(team_id)
@@ -37,7 +37,7 @@ def init_app(app, api):
             else:
                 return {}, 404
 
-    @api.route('/teams/<string:sport>')
+    @api.route('/v1/teams/<string:sport>')
     class TeamReadBySport(Resource):
         def get(self, sport):
             team = get_teams_by_sport(sport)
