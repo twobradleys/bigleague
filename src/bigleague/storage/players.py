@@ -28,7 +28,7 @@ def get_player(**conditions):
     conditions = {
         k: v for k, v in conditions.items()
         if k in ('id', 'handle', 'auth_token')}
-    return get_item(conditions, PLAYER_TABLE, get_player_fields())
+    return get_item(conditions, PLAYER_TABLE, ['id', 'handle'])
 
 
 def put_player(player):
