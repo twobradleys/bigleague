@@ -198,10 +198,9 @@ def get_latest_items(table, fields, conditions=None):
     conditions = conditions or {}
     assert isinstance(conditions, dict)
 
-    if conditions:
-        conditions_clause = (
-            ''.join(' AND %s=:%s' % (key, key)
-                    for key in conditions.keys()))
+    conditions_clause = (
+        ''.join(' AND %s=:%s' % (key, key)
+                for key in conditions.keys()))
 
     with get_connection() as conn:
         query = sql_text(

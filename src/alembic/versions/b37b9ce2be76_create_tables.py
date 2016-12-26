@@ -60,6 +60,7 @@ def create_player_table():
     op.execute("""
         CREATE TABLE player (
             id UUID NOT NULL,
+            timestamp BIGINT DEFAULT CAST(1000 * EXTRACT(EPOCH FROM NOW()) AS BIGINT) NOT NULL,
             handle VARCHAR(64) NOT NULL,
             auth_token UUID
         )
