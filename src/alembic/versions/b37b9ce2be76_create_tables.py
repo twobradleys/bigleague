@@ -2,7 +2,7 @@
 from alembic import op
 from sqlalchemy.sql import column
 
-from bigleague.lib.sports import GAME_STATES
+from bigleague.lib.sports import GAME_STATES, GAMES
 
 # revision identifiers, used by Alembic.
 revision = 'b37b9ce2be76'
@@ -37,7 +37,6 @@ def create_game_table():
             id UUID NOT NULL,
             timestamp BIGINT DEFAULT CAST(1000 * EXTRACT(EPOCH FROM NOW()) AS BIGINT) NOT NULL,
             event_name VARCHAR(256) NOT NULL,
-            event_description VARCHAR(256),
             sport VARCHAR(64) NOT NULL,
             history JSON NOT NULL,
             state VARCHAR(32),
@@ -51,6 +50,7 @@ def create_game_table():
         "ck_game_state",
         "game",
         column('state').in_(GAME_STATES)
+        & column('sport').in_(GAMES)
         & (column('home_team_id') != column('away_team_id')))
 
     op.create_primary_key("pk_game", "game", ["id", "timestamp"])
@@ -79,7 +79,7 @@ def create_cell_table():
             timestamp BIGINT DEFAULT CAST(1000 * EXTRACT(EPOCH FROM NOW()) AS BIGINT) NOT NULL,
             home_digit SMALLINT,
             away_digit SMALLINT,
-            owner_id UUID NOT NULL
+            player_id UUID NOT NULL
         )
         """)  # noqa
 

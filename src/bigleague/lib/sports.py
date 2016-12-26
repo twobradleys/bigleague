@@ -1,8 +1,20 @@
+GAMES = (
+    'football',
+    'basketball',
+)
+
+class GameState:
+    pregame = 'pregame'
+    playing = 'playing'
+    canceled = 'canceled'
+    complete = 'complete'
+
+
 GAME_STATES = (
-    'pregame',
-    'playing',
-    'canceled',
-    'complete',
+    GameState.pregame,
+    GameState.playing,
+    GameState.canceled,
+    GameState.complete,
 )
 
 

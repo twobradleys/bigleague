@@ -193,7 +193,7 @@ def put_item(item, table, fields, primary_keys=('id',),
     return dict(zip(fields, results[0]))
 
 
-def get_latest_items(table, fields, conditions=None):
+def get_latest_items(table, fields, timestamp=None, conditions=None):
     """Retrieve many items from a table, with conditional filtering."""
     conditions = conditions or {}
     assert isinstance(conditions, dict)
@@ -202,25 +202,38 @@ def get_latest_items(table, fields, conditions=None):
         ''.join(' AND %s=:%s' % (key, key)
                 for key in conditions.keys()))
 
+    timestamp_template = """t1.timestamp = (
+        SELECT max(timestamp)
+        FROM {table} t2
+        WHERE t2.id = t1.id
+        AND t2.timestamp <= {expr})"""
+
+    if timestamp:
+        # We have been given a timestamp to use as "NOW"
+        timestamp_clause = timestamp_template.format(
+            expr=":timestamp")
+    else:
+        # Let the database use its "NOW"
+        timestamp_clause = timestamp_template.format(
+            expr="CAST(1000 * EXTRACT(EPOCH FROM NOW()) AS BIGINT)",
+            table=table)
+
     with get_connection() as conn:
         query = sql_text(
             """
             SELECT {field_names}
             FROM {table} t1
-            WHERE t1.timestamp = (
-                SELECT max(timestamp)
-                FROM {table} t2
-                WHERE t2.id = t1.id
-                AND t2.timestamp <= CAST(
-                    1000 * EXTRACT(EPOCH FROM NOW()) AS BIGINT))
-            {conditions_clause}
+            WHERE {timestamp_clause}
+                  {conditions_clause}
             ORDER BY timestamp DESC
             """.format(
                 field_names=', '.join(fields),
                 table=table,
+                timestamp_clause=timestamp_clause,
                 conditions_clause=conditions_clause,
             ))
-        results = conn.execute(query, **conditions).fetchall()
+        results = conn.execute(query, **conditions,
+                               timestamp=timestamp).fetchall()
 
     if results:
         return [dict(zip(fields, row)) for row in results]

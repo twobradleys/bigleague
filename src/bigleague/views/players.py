@@ -1,7 +1,7 @@
 from flask import request
 from flask_restplus import Resource, fields
 
-from bigleague.views import expand_relations, get_uuid_field
+from bigleague.views import expand_relations
 from bigleague.storage.players import get_player, put_player, get_players
 
 

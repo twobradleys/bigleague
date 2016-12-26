@@ -4,6 +4,9 @@ from bottleneck import StorageError
 from werkzeug.exceptions import BadRequest
 
 from bigleague.storage.teams import get_team_fields, TEAM_TABLE
+from bigleague.storage.games import get_game_fields, GAME_TABLE
+from bigleague.storage.cells import get_cell_fields, CELL_TABLE
+from bigleague.storage.players import get_player_fields, PLAYER_TABLE
 
 
 def get_uuid_field(**kwargs):
@@ -27,7 +30,27 @@ def get_expanders():
     return {
         'team': {
             'table': TEAM_TABLE,
-            'fields': get_team_fields(),
+            'fields': ['id', 'name'],
+        },
+        'home_team': {
+            'table': TEAM_TABLE,
+            'fields': ['id', 'name'],
+        },
+        'away_team': {
+            'table': TEAM_TABLE,
+            'fields': ['id', 'name'],
+        },
+        'player': {
+            'table': PLAYER_TABLE,
+            'fields': ['id', 'handle'],
+        },
+        'game': {
+            'table': GAME_TABLE,
+            'fields': get_game_fields(),
+        },
+        'cell': {
+            'table': CELL_TABLE,
+            'fields': get_cell_fields(),
         },
     }
 
