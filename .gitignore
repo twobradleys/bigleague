@@ -1,0 +1,6 @@
+env
+*.swp
+*.pyc
+tags
+*.egg
+.cache
