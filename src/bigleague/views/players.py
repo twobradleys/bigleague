@@ -54,8 +54,5 @@ def init_app(app, api):
     class PlayersRead(Resource):
         def get(self):
             """Get all the players."""
-            player = get_players()
-            if player:
-                return expand_relations(player), 200
-            else:
-                return {}, 404
+            players = get_players()
+            return expand_relations(player), 200

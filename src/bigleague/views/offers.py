@@ -96,11 +96,7 @@ def init_app(app, api):  # noqa
                 conditions['away_index'] = away_index
 
             offers = get_offers(game_id=game_id, **conditions)
-
-            if offers:
-                return serialize(offers), 200
-            else:
-                return {}, 404
+            return serialize(offers), 200
 
     @api.route('/v1/offer/<uuid:game_id>/by-index/<int:home_index>/<int:away_index>')  # noqa
     class PutOffer(Resource):

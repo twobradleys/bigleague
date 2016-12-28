@@ -43,8 +43,5 @@ def init_app(app, api):
     class TeamReadBySport(Resource):
         def get(self, sport):
             """Retrieve info about all teams in a sport."""
-            team = get_teams_by_sport(sport)
-            if team:
-                return expand_relations(team), 200
-            else:
-                return {}, 404
+            teams = get_teams_by_sport(sport)
+            return expand_relations(team), 200

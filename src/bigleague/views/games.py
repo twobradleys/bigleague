@@ -59,10 +59,7 @@ def init_app(app, api):
             """Retrieve games by sport."""
             games = get_games(sport=sport,
                               timestamp=request.args.get('timestamp', None))
-            if games:
-                return expand_relations(games), 200
-            else:
-                return {}, 404
+            return expand_relations(games), 200
 
     @api.route('/v1/games')  # noqa
     class GameRead(Resource):
