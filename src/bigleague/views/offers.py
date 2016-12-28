@@ -64,9 +64,8 @@ def init_app(app, api):  # noqa
             'timestamp': ('Recall the offers available at a '
                           'particular timestamp (in epoch milliseconds) '
                           '(optional).'),
-            'state': ('Whether you want to see open or closed '
-                      'offers. Valid choices are ["open", "closed"] '
-                      '(optional).'),
+            'state': ('Filter offers by state. Valid choices are [%s] '
+                      '(optional).' % ', '.join(OFFER_STATES)),
             'player_id': 'Filter on a particular player (optional).',
             'home_index': 'The home team index (optional).',
             'away_index': 'The away team index (optional).',
