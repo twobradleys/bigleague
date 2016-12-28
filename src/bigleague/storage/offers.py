@@ -5,8 +5,9 @@ from bottleneck import put_item, get_item, get_latest_items
 
 OFFER_TABLE = 'offer'
 OFFER_OPEN = 'open'
-OFFER_CLOSED = 'closed'
-OFFER_STATES = [OFFER_OPEN, OFFER_CLOSED]
+OFFER_CANCELED = 'canceled'
+OFFER_FILLED = 'filled'
+OFFER_STATES = [OFFER_OPEN, OFFER_CANCELED, OFFER_FILLED]
 OFFER_TYPES = ['buy', 'sell']
 
 

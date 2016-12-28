@@ -4,13 +4,14 @@ from werkzeug.exceptions import BadRequest
 
 from config.serialize import serialize
 from bigleague.storage.offers import (get_offer, get_offers, OFFER_TYPES,
-                                      OFFER_STATES, OFFER_CLOSED, put_offer)
+                                      OFFER_STATES, OFFER_CANCELED, OFFER_OPEN,
+                                      put_offer)
 from bigleague.storage.cells import get_cell
 from bigleague.storage.players import get_player
 from bigleague.views import get_uuid_field
 
 
-def get_offer_fields():
+def get_put_offer_fields():
     return {
         'price': fields.Integer(
             required=False,
@@ -21,11 +22,6 @@ def get_offer_fields():
             required=False,
             enum=OFFER_TYPES,
             default='buy',
-            description='Whether you are buying or selling.'),
-        'state': fields.String(
-            required=False,
-            enum=OFFER_STATES,
-            default='open',
             description='Whether you are buying or selling.'),
         'player_id': get_uuid_field(
             description='The player placing the offer.'),
@@ -42,8 +38,25 @@ def get_offer_fields():
     }
 
 
+def get_delete_offer_fields():
+    return {
+        'player_id': get_uuid_field(
+            description='The player whose offer we are deleting.'),
+        'home_index': fields.Integer(
+            required=False,
+            min=0,
+            max=9,
+            description='The home index of the cell (required).'),
+        'away_index': fields.Integer(
+            required=False,
+            min=0,
+            max=9,
+            description='The away index of the cell (required).'),
+    }
+
+
 def init_app(app, api):  # noqa
-    offer_model = api.model('OfferModel', get_offer_fields())
+    put_offer_model = api.model('PutOfferModel', get_put_offer_fields())
 
     @api.route('/v1/offers/<uuid:game_id>')
     class GetOffers(Resource):
@@ -90,28 +103,35 @@ def init_app(app, api):  # noqa
             else:
                 return {}, 404
 
-        @api.expect(offer_model, validate=True)
-        def put(self, game_id):
+    @api.route('/v1/offer/<uuid:game_id>/by-index/<int:home_index>/<int:away_index>')  # noqa
+    class PutOffer(Resource):
+        @api.expect(put_offer_model, validate=True)
+        def put(self, game_id, home_index, away_index):
             """Put an offer to buy or sell a cell."""
             offer_request = request.get_json()
             player_id = offer_request.get('player_id')
-            home_index = offer_request['home_index']
-            away_index = offer_request['away_index']
+            price = offer_request.get('price')
+            type = offer_request.get('type')
+            if not price or not type:
+                raise BadRequest(
+                    "In order to place or update an offer, you must supply "
+                    "both 'price' and 'type'.")
 
-            if offer_request['state'] == OFFER_CLOSED:
-                return close_offer(player_id, game_id, home_index,
-                                   away_index)
+            return place_offer(player_id, game_id, home_index, away_index,
+                               price, type)
 
-            else:
-                price = offer_request.get('price')
-                type = offer_request.get('type')
-                if not price or not type:
-                    raise BadRequest(
-                        "In order to place or update an offer, you must supply "
-                        "both 'price' and 'type'.")
+        @api.doc(params={
+            'player_id': ('The player whose offer we want to delete. '
+                          '(required).'),
+        })
+        def delete(self, game_id, home_index, away_index):
+            """Cancel an offer."""
+            player_id = request.args.get('player_id')
+            if not player_id:
+                raise BadRequest("'player_id' query param is required.")
 
-                return place_offer(player_id, game_id, home_index, away_index,
-                                   price, type)
+            return close_offer(player_id, game_id, home_index,
+                               away_index)
 
 
 def close_offer(player_id, game_id, home_index, away_index):
@@ -127,10 +147,14 @@ def close_offer(player_id, game_id, home_index, away_index):
     if not existing_offer:
         raise BadRequest("No existing offer found.")
 
-    if existing_offer['state'] == OFFER_CLOSED:
+    if existing_offer['state'] == OFFER_CANCELED:
         return {}, 200
 
-    existing_offer['state'] = OFFER_CLOSED
+    if existing_offer['state'] != OFFER_OPEN:
+        raise BadRequest("The existing offer is '%s'."
+                         % existing_offer['state'])
+
+    existing_offer['state'] = OFFER_CANCELED
     return serialize(put_offer(existing_offer)), 200
 
 
