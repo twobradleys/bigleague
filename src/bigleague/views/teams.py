@@ -44,4 +44,4 @@ def init_app(app, api):
         def get(self, sport):
             """Retrieve info about all teams in a sport."""
             teams = get_teams_by_sport(sport)
-            return expand_relations(team), 200
+            return expand_relations(teams), 200
