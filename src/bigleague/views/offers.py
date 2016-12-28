@@ -29,6 +29,16 @@ def get_offer_fields():
             description='Whether you are buying or selling.'),
         'player_id': get_uuid_field(
             description='The player placing the offer.'),
+        'home_index': fields.Integer(
+            required=False,
+            min=0,
+            max=9,
+            description='The home index of the cell (required).'),
+        'away_index': fields.Integer(
+            required=False,
+            min=0,
+            max=9,
+            description='The away index of the cell (required).'),
     }
 
 
@@ -42,7 +52,8 @@ def init_app(app, api):  # noqa
                           'particular timestamp (in epoch milliseconds) '
                           '(optional).'),
             'state': ('Whether you want to see open or closed '
-                      'offers. Valid choices are ["open", "closed"] (optional).'),
+                      'offers. Valid choices are ["open", "closed"] '
+                      '(optional).'),
             'player_id': 'Filter on a particular player (optional).',
             'home_index': 'The home team index (optional).',
             'away_index': 'The away team index (optional).',
@@ -80,10 +91,12 @@ def init_app(app, api):  # noqa
                 return {}, 404
 
         @api.expect(offer_model, validate=True)
-        def put(self, game_id, home_index, away_index):
+        def put(self, game_id):
             """Put an offer to buy or sell a cell."""
             offer_request = request.get_json()
             player_id = offer_request.get('player_id')
+            home_index = offer_request['home_index']
+            away_index = offer_request['away_index']
 
             if offer_request['state'] == OFFER_CLOSED:
                 return close_offer(player_id, game_id, home_index,
