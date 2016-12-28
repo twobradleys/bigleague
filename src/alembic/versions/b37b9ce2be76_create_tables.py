@@ -2,7 +2,9 @@
 from alembic import op
 from sqlalchemy.sql import column
 
+from bigleague.storage.offers import OFFER_TYPES, OFFER_STATES
 from bigleague.lib.sports import GAME_STATES, GAMES
+from bigleague.lib.house import HOUSE_PLAYER_ID
 
 # revision identifiers, used by Alembic.
 revision = 'b37b9ce2be76'
@@ -17,6 +19,7 @@ def upgrade():
     create_game_table()
     create_player_table()
     create_cell_table()
+    create_offer_table()
 
 
 def create_team_table():
@@ -29,16 +32,47 @@ def create_team_table():
         )""")  # noqa
     op.create_primary_key("pk_team", "team", ["id"])
     op.create_unique_constraint("uq_name_sport", "team", ["name", "sport"])
+    op.create_check_constraint(
+        "ck_team",
+        "team",
+        column('sport').in_(GAMES))
+
+
+def create_offer_table():
+    op.execute("""
+        CREATE TABLE offer (
+            game_id UUID NOT NULL,
+            home_index SMALLINT NOT NULL,
+            away_index SMALLINT NOT NULL,
+            player_id UUID NOT NULL,
+            timestamp BIGINT DEFAULT CAST(1000 * EXTRACT(EPOCH FROM NOW()) AS BIGINT) NOT NULL,
+            type VARCHAR(8) NOT NULL,
+            price INT NOT NULL,
+            state VARCHAR(8) NOT NULL,
+            counterparty_player_id UUID,
+            timestamp_filled BIGINT,
+            counterparty_price INT
+        )""")  # noqa
+    op.create_primary_key("pk_offer", "offer", ["game_id", "home_index",
+                                                "away_index", "player_id",
+                                                "timestamp"])
+    op.create_check_constraint(
+        "ck_offer",
+        "offer",
+        column('type').in_(OFFER_TYPES)
+        & column('state').in_(OFFER_STATES))
+
+# TODO: create IRL game events table
 
 
 def create_game_table():
+    # TODO: consider refactoring event_name into an event table
     op.execute("""
         CREATE TABLE game (
             id UUID NOT NULL,
             timestamp BIGINT DEFAULT CAST(1000 * EXTRACT(EPOCH FROM NOW()) AS BIGINT) NOT NULL,
             event_name VARCHAR(256) NOT NULL,
             sport VARCHAR(64) NOT NULL,
-            history JSON NOT NULL,
             state VARCHAR(32),
             home_team_id VARCHAR(64) NOT NULL,
             away_team_id VARCHAR(64) NOT NULL,
@@ -68,7 +102,16 @@ def create_player_table():
 
     op.create_primary_key("pk_player", "player", ["id"])
     op.create_unique_constraint("uq_player", "player", ["handle"])
+    op.execute("""
+        INSERT INTO player (id, handle, auth_token) VALUES (
+            '%s',
+            'house',
+            NULL)""" % HOUSE_PLAYER_ID)
 
+
+# TODO: many-to-many of players + games + funds
+
+# TODO: offers table
 
 def create_cell_table():
     op.execute("""
@@ -89,7 +132,8 @@ def create_cell_table():
 
 def downgrade():
     """Downgrade."""
-    op.drop_table('game')
-    op.drop_table('player')
-    op.drop_table('cell')
-    op.drop_table('team')
+    op.execute("""DROP TABLE IF EXISTS game""")
+    op.execute("""DROP TABLE IF EXISTS player""")
+    op.execute("""DROP TABLE IF EXISTS cell""")
+    op.execute("""DROP TABLE IF EXISTS team""")
+    op.execute("""DROP TABLE IF EXISTS offer""")

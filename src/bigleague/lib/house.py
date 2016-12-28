@@ -1,0 +1,1 @@
+HOUSE_PLAYER_ID = '01eb998b-bcba-4390-9ddd-af4989aaf6a8'

@@ -3,7 +3,8 @@ from flask_restplus import Resource, fields
 
 from bigleague.lib.sports import GAMES
 from bigleague.views import expand_relations, get_uuid_field
-from bigleague.storage.games import get_game, put_game, get_games
+from bigleague.storage.games import (get_game, put_game, get_games,
+                                     ensure_cells_exist)
 
 
 def get_game_fields():
@@ -31,6 +32,7 @@ def init_app(app, api):
         def post(self):
             """Create a game."""
             game = put_game(request.get_json())
+            ensure_cells_exist(game['id'])
             if game:
                 return expand_relations(game), 200
             else:

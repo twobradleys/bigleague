@@ -1,12 +1,13 @@
-import json
 from uuid import uuid4
 
-from config.serialize import serialize
 from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import BadRequest
 
 from bottleneck import put_item, get_item, get_latest_items
+from bigleague.storage.cells import get_cell, put_cell
+from bigleague.storage.offers import put_offer
 from bigleague.lib.sports import GameState
+from bigleague.lib.house import HOUSE_PLAYER_ID
 
 GAME_TABLE = 'game'
 
@@ -18,7 +19,6 @@ def get_game_fields():
         'timestamp',
         'event_name',
         'sport',
-        'history',
         'state',
         'home_team_id',
         'away_team_id',
@@ -50,12 +50,44 @@ def put_game(game):
     game.setdefault('home_score', 0)
     game.setdefault('away_score', 0)
     game.setdefault('state', GameState.pregame)
-    game.setdefault('history', [])
     game.pop('timestamp', None)
 
     try:
-        game['history'] = json.dumps(serialize(game['history']))
         return put_item(game, GAME_TABLE, get_game_fields())
     except IntegrityError as e:
         raise BadRequest('Integrity error %s in request. Please try again.' %
                          str(e))
+
+
+def ensure_cells_exist(game_id):
+    game = get_game(id=game_id)
+    if not game:
+        raise BadRequest(
+            "Game does not exist: %s" % game_id)
+
+    for home_index in range(10):
+        for away_index in range(10):
+            cell = get_cell(game_id=game_id, home_index=home_index,
+                            away_index=away_index)
+            if cell:
+                raise BadRequest(
+                    """Cell (home_index=%d, away_index=%d) already exists in
+                    game %s""" % (home_index, away_index, game_id))
+
+            cell = put_cell({
+                'game_id': game_id,
+                'home_index': home_index,
+                'away_index': away_index,
+                'home_digit': None,
+                'away_digit': None,
+                'player_id': HOUSE_PLAYER_ID,
+            })
+
+            put_offer({
+                'game_id': cell['game_id'],
+                'home_index': cell['home_index'],
+                'away_index': cell['away_index'],
+                'player_id': HOUSE_PLAYER_ID,
+                'type': 'sell',
+                'price': 50,
+            })

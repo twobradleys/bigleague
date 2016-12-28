@@ -3,10 +3,10 @@ from flask_restplus import fields
 from bottleneck import StorageError
 from werkzeug.exceptions import BadRequest
 
-from bigleague.storage.teams import get_team_fields, TEAM_TABLE
+from bigleague.storage.teams import TEAM_TABLE
 from bigleague.storage.games import get_game_fields, GAME_TABLE
 from bigleague.storage.cells import get_cell_fields, CELL_TABLE
-from bigleague.storage.players import get_player_fields, PLAYER_TABLE
+from bigleague.storage.players import PLAYER_TABLE
 
 
 def get_uuid_field(**kwargs):

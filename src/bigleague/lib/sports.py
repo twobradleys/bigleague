@@ -3,6 +3,7 @@ GAMES = (
     'basketball',
 )
 
+
 class GameState:
     pregame = 'pregame'
     playing = 'playing'

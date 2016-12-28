@@ -193,44 +193,52 @@ def put_item(item, table, fields, primary_keys=('id',),
     return dict(zip(fields, results[0]))
 
 
-def get_latest_items(table, fields, timestamp=None, conditions=None):
+def get_latest_items(table, fields, timestamp=None, conditions=None,
+                     subfilters=None):
     """Retrieve many items from a table, with conditional filtering."""
     conditions = conditions or {}
     assert isinstance(conditions, dict)
 
     conditions_clause = (
-        ''.join(' AND %s=:%s' % (key, key)
-                for key in conditions.keys()))
+        ' AND '.join('%s=:%s' % (key, key)
+                     for key in conditions.keys()))
 
-    timestamp_template = """t1.timestamp = (
-        SELECT max(timestamp)
-        FROM {table} t2
-        WHERE t2.id = t1.id
-        AND t2.timestamp <= {expr})"""
+    # Subfilters allow us to select over more primary keys, and still get the
+    # most recent entry for each primary key. (They are the difference between
+    # the primary keys and the conditions keys minus the timestamp key.)
+    subfilters_clause = (
+        ' AND '.join('t1.%s = t2.%s' % (subfilter, subfilter)
+                     for subfilter in subfilters or []))
 
     if timestamp:
-        # We have been given a timestamp to use as "NOW"
-        timestamp_clause = timestamp_template.format(
-            expr=":timestamp")
+        recency_clause = "t2.timestamp <= :timestamp"
     else:
-        # Let the database use its "NOW"
-        timestamp_clause = timestamp_template.format(
-            expr="CAST(1000 * EXTRACT(EPOCH FROM NOW()) AS BIGINT)",
-            table=table)
+        recency_clause = ("t2.timestamp <= CAST("
+                          "1000 * EXTRACT(EPOCH FROM NOW()) AS BIGINT)")
+
+    timestamp_clause = """t1.timestamp = (
+        SELECT max(timestamp)
+        FROM {table} t2
+        WHERE {clauses})""".format(table=table,
+                                   clauses=' AND '.join(
+                                       filter(bool,
+                                              [recency_clause,
+                                               conditions_clause,
+                                               subfilters_clause])))
 
     with get_connection() as conn:
         query = sql_text(
             """
             SELECT {field_names}
             FROM {table} t1
-            WHERE {timestamp_clause}
-                  {conditions_clause}
+            WHERE {clauses}
             ORDER BY timestamp DESC
             """.format(
                 field_names=', '.join(fields),
                 table=table,
-                timestamp_clause=timestamp_clause,
-                conditions_clause=conditions_clause,
+                clauses=' AND '.join(filter(bool,
+                                            [timestamp_clause,
+                                             conditions_clause])),
             ))
         results = conn.execute(query, **conditions,
                                timestamp=timestamp).fetchall()
