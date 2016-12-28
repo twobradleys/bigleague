@@ -30,13 +30,10 @@ def get_offer_fields():
 
 def get_offers(timestamp=None, **conditions):
     """Get all the offers."""
-    subfilters = list(
-        set(['game_id', 'home_index', 'away_index', 'player_id']) -
-        set(conditions.keys()))
-
     return get_latest_items(OFFER_TABLE, get_offer_fields(),
                             timestamp=timestamp, conditions=conditions,
-                            subfilters=subfilters)
+                            primary_keys=['game_id', 'home_index', 'away_index',
+                                          'player_id'])
 
 
 def get_offer(**conditions):

@@ -20,7 +20,8 @@ def get_player_fields():
 
 def get_players():
     """Get all the players."""
-    return get_latest_items(PLAYER_TABLE, ['id', 'handle'])
+    return get_latest_items(PLAYER_TABLE, ['id', 'handle'],
+                            primary_keys=['id'])
 
 
 def get_player(**conditions):

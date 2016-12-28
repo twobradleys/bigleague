@@ -30,7 +30,8 @@ def get_game_fields():
 def get_games(timestamp=None, **conditions):
     """Get all the games."""
     return get_latest_items(GAME_TABLE, get_game_fields(), timestamp=timestamp,
-                            conditions=conditions)
+                            conditions=conditions,
+                            primary_keys=['id'])
 
 
 def get_game(**conditions):

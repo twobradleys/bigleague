@@ -22,7 +22,9 @@ def get_cell_fields():
 def get_cells(timestamp=None, **conditions):
     """Get all the cells."""
     return get_latest_items(CELL_TABLE, get_cell_fields(), timestamp=timestamp,
-                            conditions=conditions)
+                            conditions=conditions,
+                            primary_keys=['game_id', 'home_index',
+                                          'away_index'])
 
 
 def get_cell(**conditions):

@@ -22,7 +22,7 @@ def get_teams_by_sport(sport):
     """Get all the teams for a sport."""
     return get_latest_items(TEAM_TABLE, get_team_fields(),
                             conditions={'sport': sport},
-                            subfilters=['name'])
+                            primary_keys=['id'])
 
 
 def get_team(team_id, timestamp=None):

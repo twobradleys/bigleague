@@ -194,7 +194,7 @@ def put_item(item, table, fields, primary_keys=('id',),
 
 
 def get_latest_items(table, fields, timestamp=None, conditions=None,
-                     subfilters=None):
+                     primary_keys=None):
     """Retrieve many items from a table, with conditional filtering."""
     conditions = conditions or {}
     assert isinstance(conditions, dict)
@@ -203,12 +203,16 @@ def get_latest_items(table, fields, timestamp=None, conditions=None,
         ' AND '.join('%s=:%s' % (key, key)
                      for key in conditions.keys()))
 
-    # Subfilters allow us to select over more primary keys, and still get the
-    # most recent entry for each primary key. (They are the difference between
-    # the primary keys and the conditions keys minus the timestamp key.)
+    # Select over composite primary keys, and still get the most recent entry
+    # for each relation.
+    subfilters = (
+        set(primary_keys or []) -
+        set(conditions.keys()) -
+        set(['timestamp']))
+
     subfilters_clause = (
         ' AND '.join('t1.%s = t2.%s' % (subfilter, subfilter)
-                     for subfilter in subfilters or []))
+                     for subfilter in subfilters))
 
     if timestamp:
         recency_clause = "t2.timestamp <= :timestamp"
